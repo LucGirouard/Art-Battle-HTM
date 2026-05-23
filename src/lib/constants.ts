@@ -1,5 +1,6 @@
 export const ROUTES = {
   home: "/",
+  auth: "/auth",
   quickplay: "/quickplay",
   quickplayCreate: "/quickplay/create",
   quickplayJoin: (code: string) => `/quickplay/join/${code}`,

@@ -5,17 +5,27 @@ import PageCard from "@/components/ui/page-card";
 import PageTitle from "@/components/ui/page-title";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ROOM_CODE_LENGTH, ROUTES } from "@/lib/constants";
+import { isLoggedIn } from "@/lib/auth";
 import { isValidRoomCode, sanitizeRoomCode } from "@/lib/room-code";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function QuickplayPage() {
   const router = useRouter();
   const [joinCode, setJoinCode] = useState("");
+  const loggedIn = isLoggedIn();
   const canJoin = isValidRoomCode(joinCode);
   const handleJoin = () =>
     canJoin && router.push(ROUTES.quickplayJoin(joinCode));
+
+  useEffect(() => {
+    if (!loggedIn) {
+      router.replace(`${ROUTES.auth}?mode=login&next=${encodeURIComponent(ROUTES.quickplay)}`);
+    }
+  }, [loggedIn, router]);
+
+  if (!loggedIn) return null;
 
   return (
     <PageShell maxWidth="4xl">

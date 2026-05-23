@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import PageShell from "@/components/page-shell";
 import PageCard from "@/components/ui/page-card";
 import PageTitle from "@/components/ui/page-title";
@@ -16,6 +17,7 @@ import {
   TINDERART_STARTING_ELO,
   TINDERART_STORAGE_KEY,
 } from "@/lib/constants";
+import { isLoggedIn } from "@/lib/auth";
 
 type ArenaCard = {
   id: string;
@@ -41,6 +43,8 @@ function mockCard(seed: string, color: string) {
 }
 
 export default function TinderArtArenaPage() {
+  const router = useRouter();
+  const loggedIn = isLoggedIn();
   const [index, setIndex] = useState(0);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -96,12 +100,14 @@ export default function TinderArtArenaPage() {
     ];
   });
 
-  if (cards.length === 0) {
-    return null;
-  }
+  useEffect(() => {
+    if (!loggedIn) {
+      router.replace(`${ROUTES.auth}?mode=login&next=${encodeURIComponent(ROUTES.tinderArtArena)}`);
+    }
+  }, [loggedIn, router]);
 
   const complete = index >= cards.length;
-  const currentIndex = Math.min(index, cards.length - 1);
+  const currentIndex = cards.length ? Math.min(index, cards.length - 1) : 0;
   const current = cards[currentIndex];
   const leaderboard = [...cards].sort((a, b) => b.elo - a.elo);
   const topThree = leaderboard.slice(0, 3);
@@ -125,6 +131,10 @@ export default function TinderArtArenaPage() {
       return () => window.clearTimeout(timer);
     }
   }, [complete]);
+
+  if (!loggedIn || cards.length === 0) {
+    return null;
+  }
 
   const onTouchStart = (clientX: number) => {
     setTouchStartX(clientX);

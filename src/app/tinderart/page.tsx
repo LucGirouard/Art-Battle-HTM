@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import PageShell from "@/components/page-shell";
@@ -15,6 +15,7 @@ import {
   TINDERART_MAX_UPLOADS,
   TINDERART_STORAGE_KEY,
 } from "@/lib/constants";
+import { isLoggedIn } from "@/lib/auth";
 
 function toDataUrl(file: File) {
   return new Promise<string>((resolve) => {
@@ -28,6 +29,13 @@ export default function TinderArtPage() {
   const router = useRouter();
   const [previews, setPreviews] = useState<string[]>([]);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "done">("idle");
+  const loggedIn = isLoggedIn();
+
+  useEffect(() => {
+    if (!loggedIn) {
+      router.replace(`${ROUTES.auth}?mode=login&next=${encodeURIComponent(ROUTES.tinderArt)}`);
+    }
+  }, [loggedIn, router]);
 
   const onFilesSelected = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -56,6 +64,8 @@ export default function TinderArtPage() {
   };
 
   const requiresSubmit = previews.length > 0 && submitStatus !== "done";
+
+  if (!loggedIn) return null;
 
   return (
     <PageShell maxWidth="4xl">

@@ -1,9 +1,11 @@
 import { ReactNode } from "react";
 import DoodleOverlay from "@/components/doodle-overlay";
+import AuthControls from "@/components/auth-controls";
 
 type PageShellProps = {
   children: ReactNode;
   maxWidth?: "2xl" | "4xl";
+  showDoodles?: boolean;
 };
 
 const maxWidthClass: Record<NonNullable<PageShellProps["maxWidth"]>, string> = {
@@ -14,10 +16,12 @@ const maxWidthClass: Record<NonNullable<PageShellProps["maxWidth"]>, string> = {
 export default function PageShell({
   children,
   maxWidth = "4xl",
+  showDoodles = true,
 }: PageShellProps) {
   return (
     <main className="paper-bg relative min-h-screen overflow-hidden px-4 py-5 text-slate-900 sm:px-8 sm:py-8 md:px-10 md:py-10">
-      <DoodleOverlay />
+      {showDoodles ? <DoodleOverlay /> : null}
+      <AuthControls />
 
       <div
         className={`relative z-20 mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full ${maxWidthClass[maxWidth]} items-center justify-center md:min-h-[calc(100vh-4rem)]`}
