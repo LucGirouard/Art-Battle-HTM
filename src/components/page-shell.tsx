@@ -56,9 +56,7 @@ export default function PageShell({
 
   return (
     <main
-      className={`paper-bg relative min-h-screen overflow-hidden px-4 py-5 text-slate-900 sm:px-8 sm:py-8 md:px-10 md:py-10 ${
-        isHomeLanding ? "h-[100dvh]" : ""
-      }`}
+      className="paper-bg relative min-h-[100dvh] overflow-hidden px-4 py-5 text-slate-900 sm:px-8 sm:py-8 md:px-10 md:py-10"
     >
       {showDoodles ? <DoodleOverlay /> : null}
       {showAuthControls || shouldShowHomeButton ? (
