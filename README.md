@@ -1,4 +1,4 @@
-# Art Battle HTM
+# Doodle Duel
 
 A fast, daily art game built for Hack The Mountain.
 

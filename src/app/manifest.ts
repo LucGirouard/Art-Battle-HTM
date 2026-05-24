@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Doodle Duel",
     short_name: "DoodleDuel",
     description:
-      "A daily drawing challenge where the community votes and ranks art in TinderArt.",
+      "A daily drawing challenge where the community votes and ranks art in Rate It.",
     start_url: "/",
     display: "standalone",
     background_color: "#f7f1e8",
