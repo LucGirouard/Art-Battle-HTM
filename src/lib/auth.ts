@@ -18,6 +18,8 @@ export async function registerUser(
     return { ok: false as const, error: "Registration returned no user." };
   }
 
+  // upsert = update or insert so if the profile already exists it will be updated
+  // otherwise, it will be created. 
   const { error: profileError } = await supabase.from("profiles").upsert(
     {
       id: data.user.id,
