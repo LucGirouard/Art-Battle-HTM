@@ -7,10 +7,7 @@ export const ROUTES = {
   tinderArtArena: "/tinderart/arena",
 } as const;
 
-export const TINDERART_STORAGE_KEY = "tinderart_uploads";
-export const TINDERART_MAX_UPLOADS = 10;
 export const TINDERART_STARTING_ELO = 1000;
 export const TINDERART_ELO_UP = 12;
 export const TINDERART_ELO_DOWN = 10;
-export const DAILY_DRAW_SECONDS = 180;
-export const DAILY_DRAW_SUBMISSION_KEY = "daily_draw_submission";
+export const DAILY_DRAW_SECONDS = 120;
