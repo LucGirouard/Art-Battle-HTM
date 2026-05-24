@@ -6,15 +6,20 @@ import PageShell from "@/components/page-shell";
 import PageCard from "@/components/ui/page-card";
 import PageTitle from "@/components/ui/page-title";
 import { PrimaryButton, PrimaryLinkButton } from "@/components/ui/primary-button";
-import { ROUTES, RATE_IT_ELO_DOWN, RATE_IT_ELO_UP } from "@/lib/constants";
+import { ROUTES } from "@/lib/constants";
 import { getLocalDayRange } from "@/lib/day";
 import { supabase } from "@/lib/supabase";
 
 type ArenaCard = { id: string; src: string; elo: number; username: string };
 
-function nextScore(current: number, liked: boolean) {
-  const delta = liked ? RATE_IT_ELO_UP : -RATE_IT_ELO_DOWN;
-  return Math.max(0, Math.min(3000, current + delta));
+const ELO_BASELINE = 1000;
+const ELO_K = 24;
+
+function nextScore(current: number, liked: boolean, opponent = ELO_BASELINE) {
+  const expected = 1 / (1 + Math.pow(10, (opponent - current) / 400));
+  const actual = liked ? 1 : 0;
+  const updated = Math.round(current + ELO_K * (actual - expected));
+  return Math.max(0, Math.min(3000, updated));
 }
 
 export default function RateItArenaPage() {
@@ -157,6 +162,7 @@ export default function RateItArenaPage() {
               style={{
                 transform: `translateX(${touchDeltaX}px) rotate(${touchDeltaX * 0.02}deg)`,
                 transition: touchStartX === null ? "transform 180ms ease" : "none",
+                backgroundColor: touchDeltaX > 30 ? "rgba(34,197,94,0.08)" : touchDeltaX < -30 ? "rgba(239,68,68,0.08)" : undefined,
               }}
             >
               <div className="bg-[#fffaf1]">
@@ -217,12 +223,12 @@ export default function RateItArenaPage() {
                     </div>
                   ))}
                 </div>
-                {leaderboard.map((card, rank) => (
+                {leaderboard.slice(3).map((card, rank) => (
                   <div
                     key={card.id}
                     className="flex items-center justify-between rounded-xl border border-stone-200 bg-white/70 px-3 py-2 sm:px-4 sm:py-3"
                   >
-                    <p className="text-xs font-semibold text-stone-700 sm:text-sm">#{rank + 1}</p>
+                    <p className="text-xs font-semibold text-stone-700 sm:text-sm">#{rank + 4}</p>
                     <p className="max-w-[45%] truncate text-xs font-semibold text-stone-600 sm:text-sm">
                       {card.username}
                     </p>
@@ -243,4 +249,3 @@ export default function RateItArenaPage() {
     </PageShell>
   );
 }
-

@@ -216,8 +216,8 @@ export default function DailyDrawPage() {
   const toolButtonClass =
     "rounded-full border border-stone-400 bg-stone-100 px-4 py-2 text-xs font-semibold text-stone-800 transition hover:bg-stone-200 disabled:cursor-not-allowed disabled:opacity-50";
 
-  const submit = async () => {
-    if (!canEdit || !userId) return;
+  const submit = async (force = false) => {
+    if ((!canEdit && !force) || !userId) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -248,6 +248,15 @@ export default function DailyDrawPage() {
 
     setSubmitted(true);
   };
+
+  useEffect(() => {
+    if (secondsLeft === 0 && !submitted && userId) {
+      const id = window.setTimeout(() => {
+        void submit(true);
+      }, 0);
+      return () => window.clearTimeout(id);
+    }
+  }, [secondsLeft]);
 
   if (loading) return null;
 
@@ -282,17 +291,44 @@ export default function DailyDrawPage() {
           ) : null}
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 rounded-full border border-stone-300 bg-white/75 px-3 py-2">
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-stone-300 bg-white/75 px-3 py-2 sm:w-auto sm:rounded-full">
             <label className="text-xs font-semibold text-stone-700">Color</label>
-            <input
-              type="color"
-              value={brushColor}
-              disabled={!canEdit}
-              onChange={(e) => setBrushColor(e.target.value)}
-              className="h-8 w-10 cursor-pointer rounded-md border border-stone-300 bg-white disabled:cursor-not-allowed disabled:opacity-50"
-            />
-            <label className="ml-2 text-xs font-semibold text-stone-700">Size</label>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {["#7c2d12", "#dc2626", "#f97316", "#16a34a", "#2563eb", "#7c3aed", "#000000", "#ffffff"].map((c) => (
+                <button
+                  key={c}
+                  disabled={!canEdit}
+                  onClick={() => { setBrushColor(c); setIsEraser(false); }}
+                  className="h-5 w-5 rounded-full border-2 transition disabled:cursor-not-allowed disabled:opacity-50 sm:h-6 sm:w-6"
+                  style={{
+                    backgroundColor: c,
+                    borderColor: brushColor === c ? "#92400e" : "#d6d3d1",
+                    boxShadow: brushColor === c ? "0 0 0 2px #fef3c7" : undefined,
+                  }}
+                />
+              ))}
+              <label
+                className="relative h-5 w-5 cursor-pointer rounded-md border-2 border-stone-300 transition sm:h-6 sm:w-6"
+                style={{
+                  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.5)",
+                }}
+                title="Custom color"
+              >
+                <span
+                  className="block h-full w-full rounded-[4px]"
+                  style={{ backgroundColor: brushColor }}
+                />
+                <input
+                  type="color"
+                  value={brushColor}
+                  disabled={!canEdit}
+                  onChange={(e) => { setBrushColor(e.target.value); setIsEraser(false); }}
+                  className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-not-allowed"
+                />
+              </label>
+            </div>
+            <label className="text-xs font-semibold text-stone-700 sm:ml-2">Size</label>
             <input
               type="range"
               min={1}
@@ -300,17 +336,17 @@ export default function DailyDrawPage() {
               value={brushSize}
               disabled={!canEdit}
               onChange={(e) => setBrushSize(Number(e.target.value))}
-              className="w-24 accent-amber-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-28 md:w-32"
+              className="h-8 w-24 accent-amber-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-28 md:w-32"
             />
             <span className="w-7 rounded-full bg-stone-100 px-1.5 py-0.5 text-center text-[11px] font-semibold text-stone-700">
               {brushSize}
             </span>
           </div>
-          <div className="ml-1.5 flex flex-wrap items-center gap-2.5 sm:ml-2">
+          <div className="grid w-full grid-cols-3 gap-2 sm:ml-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-2.5">
             <button
               onClick={toggleEraser}
               disabled={!canEdit}
-              className={`${toolButtonClass} px-3 py-1.5 text-[11px] ${
+              className={`${toolButtonClass} w-full px-2 py-1.5 text-[11px] sm:w-auto sm:px-3 ${
                 isEraser
                   ? "border-stone-900 bg-stone-900 text-white hover:bg-stone-900"
                   : ""
@@ -321,14 +357,14 @@ export default function DailyDrawPage() {
             <button
               onClick={undo}
               disabled={!canEdit || !canUndo}
-              className={`${toolButtonClass} px-3 py-1.5 text-[11px]`}
+              className={`${toolButtonClass} w-full px-2 py-1.5 text-[11px] sm:w-auto sm:px-3`}
             >
               Undo
             </button>
             <button
               onClick={clearCanvas}
               disabled={!canEdit}
-              className={`${toolButtonClass} px-3 py-1.5 text-[11px]`}
+              className={`${toolButtonClass} w-full px-2 py-1.5 text-[11px] sm:w-auto sm:px-3`}
             >
               Clear
             </button>
@@ -339,7 +375,7 @@ export default function DailyDrawPage() {
           <canvas
             ref={canvasRef}
             className="block h-[clamp(360px,62dvh,760px)] w-full touch-none"
-            style={{ pointerEvents: "auto", touchAction: "none" }}
+            style={{ pointerEvents: "auto", touchAction: "none", userSelect: "none", WebkitUserSelect: "none" }}
           />
         </div>
 

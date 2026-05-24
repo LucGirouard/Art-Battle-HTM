@@ -46,5 +46,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/__disabled"],
+  matcher: ["/quickplay/:path*", "/rate-it/:path*"],
 };

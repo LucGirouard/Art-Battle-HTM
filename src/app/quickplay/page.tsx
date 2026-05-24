@@ -15,11 +15,11 @@ export default function QuickplayPage() {
   const dailyTheme = getDailyTheme();
 
   useEffect(() => {
-  supabase.auth.getSession().then(async ({ data }) => {
-    if (!data.session) {
-      window.location.href = `/auth?mode=login&next=${encodeURIComponent(window.location.pathname)}`;
-      return;
-    }
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) {
+        window.location.href = `/auth?mode=login&next=${encodeURIComponent(window.location.pathname)}`;
+        return;
+      }
       const uid = data.session.user.id;
       const { startIso, endIso } = getLocalDayRange();
       const { data: existing } = await supabase
