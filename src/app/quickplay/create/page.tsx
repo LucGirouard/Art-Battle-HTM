@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PageShell from "@/components/page-shell";
 import PageCard from "@/components/ui/page-card";
 import PageTitle from "@/components/ui/page-title";
@@ -42,7 +42,7 @@ export default function DailyDrawPage() {
   useEffect(() => { brushColorRef.current = brushColor; }, [brushColor]);
   useEffect(() => { brushSizeRef.current = brushSize; }, [brushSize]);
   useEffect(() => { eraserRef.current = isEraser; }, [isEraser]);
-  useLayoutEffect(() => { canEditRef.current = canEdit; }, [canEdit]);
+  useEffect(() => { canEditRef.current = canEdit; }, [canEdit]);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -86,6 +86,7 @@ export default function DailyDrawPage() {
   }, [loading, submitted]);
 
   useEffect(() => {
+    if (loading) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -171,23 +172,24 @@ export default function DailyDrawPage() {
 
     redrawRef.current = redrawAll;
     resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
     window.addEventListener("resize", resize);
 
     canvas.addEventListener("pointerdown", startDrawing);
-    canvas.addEventListener("pointermove", draw);
-    canvas.addEventListener("pointerup", stopDrawing);
-    canvas.addEventListener("pointerleave", stopDrawing);
-    canvas.addEventListener("pointercancel", stopDrawing);
+    window.addEventListener("pointermove", draw);
+    window.addEventListener("pointerup", stopDrawing);
+    window.addEventListener("pointercancel", stopDrawing);
 
     return () => {
+      ro.disconnect();
       window.removeEventListener("resize", resize);
       canvas.removeEventListener("pointerdown", startDrawing);
-      canvas.removeEventListener("pointermove", draw);
-      canvas.removeEventListener("pointerup", stopDrawing);
-      canvas.removeEventListener("pointerleave", stopDrawing);
-      canvas.removeEventListener("pointercancel", stopDrawing);
+      window.removeEventListener("pointermove", draw);
+      window.removeEventListener("pointerup", stopDrawing);
+      window.removeEventListener("pointercancel", stopDrawing);
     };
-  }, []);
+  }, [loading]);
 
   const clearCanvas = () => {
     if (!canEdit) return;
@@ -329,8 +331,8 @@ export default function DailyDrawPage() {
         <div className="mt-4 overflow-hidden rounded-2xl border border-stone-300 bg-[#fffaf1]">
           <canvas
             ref={canvasRef}
-            className="block aspect-square w-full touch-none"
-            style={{ pointerEvents: canEdit ? "auto" : "none" }}
+            className="block h-[clamp(360px,62vh,760px)] w-full touch-none"
+            style={{ pointerEvents: "auto", touchAction: "none" }}
           />
         </div>
 
