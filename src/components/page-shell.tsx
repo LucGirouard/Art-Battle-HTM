@@ -80,7 +80,13 @@ export default function PageShell({
       ) : null}
 
       <div
-        className={`relative z-20 mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full ${maxWidthClass[maxWidth]} items-center justify-center md:min-h-[calc(100vh-4rem)] ${reserveTopRailSpace ? "pt-12 sm:pt-0" : ""}`}
+        className={`relative z-20 mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full ${maxWidthClass[maxWidth]} items-center justify-center md:min-h-[calc(100vh-4rem)] ${
+          reserveTopRailSpace
+            ? isHomeLanding
+              ? "pt-16 sm:pt-0"
+              : "pt-12 sm:pt-0"
+            : ""
+        }`}
       >
         {children}
       </div>
