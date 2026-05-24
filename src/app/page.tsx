@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/constants";
 
 export default function Home() {
   return (
-    <PageShell maxWidth="4xl">
+    <PageShell maxWidth="4xl" showDoodles>
       <PageCard className="relative px-5 py-10 sm:px-10 sm:py-14 md:px-12 md:py-16">
         <div className="relative flex flex-col items-center text-center animate-[rise-in_700ms_ease-out]">
           <p className="mx-auto text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-stone-500 sm:text-xs sm:tracking-[0.45em]">

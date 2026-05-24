@@ -18,6 +18,7 @@ function AuthPageInner() {
   const mode: Mode = search.get("mode") === "register" ? "register" : "login";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const requestedNext = search.get("next") || ROUTES.home;
   const nextRoute = requestedNext.startsWith("/") ? requestedNext : ROUTES.home;
@@ -28,13 +29,17 @@ function AuthPageInner() {
       setError("Please enter email and password.");
       return;
     }
+    if (mode === "register" && !username.trim()) {
+      setError("Please enter a username.");
+      return;
+    }
     if (password.length < 6) {
       setError("Password must be at least 6 characters.");
       return;
     }
     const result =
       mode === "register"
-        ? await registerUser(email, password)
+        ? await registerUser(email, password, username.trim())
         : await loginUser(email, password);
     if (!result.ok) {
       setError(result.error);
@@ -44,12 +49,7 @@ function AuthPageInner() {
   };
 
   return (
-    <PageShell
-      maxWidth="2xl"
-      showDoodles={false}
-      showAuthControls={false}
-      showHomeButton={false}
-    >
+    <PageShell maxWidth="2xl" showDoodles={false} showAuthControls={false} showHomeButton={false}>
       <PageCard className="px-5 py-9 sm:px-8 sm:py-11 md:px-12 animate-[rise-in_700ms_ease-out]">
         <p className="text-xs font-semibold uppercase tracking-[0.45em] text-stone-500">account</p>
         <PageTitle className="mt-4 text-4xl sm:text-5xl">
@@ -57,6 +57,15 @@ function AuthPageInner() {
         </PageTitle>
 
         <div className="mt-6 space-y-3">
+          {mode === "register" && (
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username"
+              className="w-full rounded-2xl border border-stone-300 bg-[#fffaf1] px-4 py-3 text-sm text-stone-800 outline-none focus:border-amber-700"
+            />
+          )}
           <input
             type="email"
             value={email}
@@ -89,25 +98,19 @@ function AuthPageInner() {
 
         {mode === "login" ? (
           <p className="mt-5 text-sm text-stone-700">
-            If you don&apos;t have an account,{" "}
-            <Link
-              href={`${ROUTES.auth}?mode=register`}
-              className="font-semibold text-amber-800 underline decoration-amber-700/70 underline-offset-4"
-            >
-              click here to register
+            Don&apos;t have an account?{" "}
+            <Link href={`${ROUTES.auth}?mode=register`}
+              className="font-semibold text-amber-800 underline decoration-amber-700/70 underline-offset-4">
+              Register here
             </Link>
-            .
           </p>
         ) : (
           <p className="mt-5 text-sm text-stone-700">
             Already have an account?{" "}
-            <Link
-              href={`${ROUTES.auth}?mode=login`}
-              className="font-semibold text-amber-800 underline decoration-amber-700/70 underline-offset-4"
-            >
+            <Link href={`${ROUTES.auth}?mode=login`}
+              className="font-semibold text-amber-800 underline decoration-amber-700/70 underline-offset-4">
               Login here
             </Link>
-            .
           </p>
         )}
       </PageCard>

@@ -23,7 +23,7 @@ const maxWidthClass: Record<NonNullable<PageShellProps["maxWidth"]>, string> = {
 export default function PageShell({
   children,
   maxWidth = "4xl",
-  showDoodles = true,
+  showDoodles = false,
   showAuthControls = true,
   showHomeButton,
 }: PageShellProps) {
