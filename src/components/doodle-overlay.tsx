@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 type Point = { x: number; y: number };
+const EDGE_SCROLL_GUTTER_PX = 56;
 
 export default function DoodleOverlay() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -99,6 +100,20 @@ export default function DoodleOverlay() {
 
     const onPointerDown = (event: PointerEvent) => {
       if (event.pointerType === "mouse" && event.button !== 0) return;
+      if (event.pointerType === "touch") {
+        const vw = window.innerWidth;
+        const inEdgeGutter =
+          event.clientX <= EDGE_SCROLL_GUTTER_PX ||
+          event.clientX >= vw - EDGE_SCROLL_GUTTER_PX;
+
+        if (inEdgeGutter) {
+          drawingRef.current = false;
+          pointerRef.current = null;
+          lastRef.current = null;
+          return;
+        }
+      }
+
       drawingRef.current = true;
       if (event.pointerType === "touch" && event.target instanceof Element) {
         event.preventDefault();
