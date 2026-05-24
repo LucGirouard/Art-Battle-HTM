@@ -18,7 +18,9 @@ type AmbientKind =
   | "house";
 type AmbientPlacement = { x: number; y: number; size: number; at: number };
 const MAX_AMBIENT_DOODLES = 15;
+const MAX_TOTAL_AMBIENT_SPAWNS = 180;
 const AMBIENT_VISIBLE_MS = 60000;
+const DOODLE_HUES = [355, 12, 140, 165, 208, 228, 255, 282, 318];
 
 export default function DoodleOverlay() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -30,6 +32,7 @@ export default function DoodleOverlay() {
   const ambientIntervalRef = useRef<number | null>(null);
   const ambientTimeoutsRef = useRef<number[]>([]);
   const ambientPlacementsRef = useRef<AmbientPlacement[]>([]);
+  const totalAmbientSpawnsRef = useRef(0);
   const hueRef = useRef(0);
   const fadeFramesRef = useRef(0);
 
@@ -84,9 +87,10 @@ export default function DoodleOverlay() {
       kind: AmbientKind,
       alpha: number,
     ) => {
-      hueRef.current = (hueRef.current + 7) % 360;
+      const hue = DOODLE_HUES[Math.floor(hueRef.current) % DOODLE_HUES.length];
+      hueRef.current += 1;
       ctx.globalCompositeOperation = "source-over";
-      ctx.strokeStyle = `hsla(${hueRef.current}, 70%, 48%, ${alpha})`;
+      ctx.strokeStyle = `hsla(${hue}, 74%, 48%, ${alpha})`;
       ctx.lineWidth = 2.8;
       ctx.beginPath();
 
@@ -250,13 +254,14 @@ export default function DoodleOverlay() {
       }
 
       ctx.stroke();
-      ctx.strokeStyle = `hsla(${(hueRef.current + 20) % 360}, 84%, 62%, ${alpha * 0.45})`;
+      ctx.strokeStyle = `hsla(${hue}, 86%, 62%, ${alpha * 0.45})`;
       ctx.lineWidth = 4.2;
       ctx.stroke();
     };
 
     const drawAmbientDoodle = () => {
       if (drawingRef.current) return;
+      if (totalAmbientSpawnsRef.current >= MAX_TOTAL_AMBIENT_SPAWNS) return;
       const w = window.innerWidth;
       const h = window.innerHeight;
       const safe = 54;
@@ -288,6 +293,7 @@ export default function DoodleOverlay() {
       ];
 
       for (let spawn = 0; spawn < 1; spawn += 1) {
+        if (totalAmbientSpawnsRef.current >= MAX_TOTAL_AMBIENT_SPAWNS) break;
         if (ambientPlacementsRef.current.length >= MAX_AMBIENT_DOODLES) break;
         let x = safe + Math.random() * Math.max(1, w - safe * 2);
         let y = safe + Math.random() * Math.max(1, h - safe * 2);
@@ -322,6 +328,7 @@ export default function DoodleOverlay() {
           ambientTimeoutsRef.current.push(id);
         });
         ambientPlacementsRef.current.push({ x, y, size, at: now });
+        totalAmbientSpawnsRef.current += 1;
       }
 
       fadeFramesRef.current = Math.max(fadeFramesRef.current, 960);
