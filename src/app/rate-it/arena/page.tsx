@@ -6,17 +6,18 @@ import PageShell from "@/components/page-shell";
 import PageCard from "@/components/ui/page-card";
 import PageTitle from "@/components/ui/page-title";
 import { PrimaryButton, PrimaryLinkButton } from "@/components/ui/primary-button";
-import { ROUTES, TINDERART_ELO_DOWN, TINDERART_ELO_UP } from "@/lib/constants";
+import { ROUTES, RATE_IT_ELO_DOWN, RATE_IT_ELO_UP } from "@/lib/constants";
+import { getLocalDayRange } from "@/lib/day";
 import { supabase } from "@/lib/supabase";
 
 type ArenaCard = { id: string; src: string; elo: number; username: string };
 
-function nextElo(current: number, liked: boolean) {
-  const delta = liked ? TINDERART_ELO_UP : -TINDERART_ELO_DOWN;
+function nextScore(current: number, liked: boolean) {
+  const delta = liked ? RATE_IT_ELO_UP : -RATE_IT_ELO_DOWN;
   return Math.max(0, Math.min(3000, current + delta));
 }
 
-export default function TinderArtArenaPage() {
+export default function RateItArenaPage() {
   const [cards, setCards] = useState<ArenaCard[]>([]);
   const [index, setIndex] = useState(0);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -27,27 +28,30 @@ export default function TinderArtArenaPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
-  if (!data.session) {
-    window.location.href = `/auth?mode=login&next=${encodeURIComponent(window.location.pathname)}`;
-    return;
-  }
-  const uid = data.session.user.id;
-  setUserId(uid);
+      if (!data.session) {
+        window.location.href = `/auth?mode=login&next=${encodeURIComponent(window.location.pathname)}`;
+        return;
+      }
+      const uid = data.session.user.id;
+      setUserId(uid);
+      const { startIso, endIso } = getLocalDayRange();
 
-      const today = new Date().toISOString().slice(0, 10);
       const { data: artworks } = await supabase
         .from("artworks")
         .select("id, image_url, elo, username")
-        .gte("created_at", `${today}T00:00:00`)
+        .gte("created_at", startIso)
+        .lt("created_at", endIso)
         .order("created_at", { ascending: false });
 
       if (artworks) {
-        setCards(artworks.map((a) => ({
-          id: a.id,
-          src: a.image_url,
-          elo: a.elo,
-          username: a.username ?? "Anonymous",
-        })));
+        setCards(
+          artworks.map((a) => ({
+            id: a.id,
+            src: a.image_url,
+            elo: a.elo,
+            username: a.username ?? "Anonymous",
+          })),
+        );
       }
       setLoading(false);
     });
@@ -60,9 +64,9 @@ export default function TinderArtArenaPage() {
 
   const onSwipe = async (liked: boolean) => {
     if (!current) return;
-    const newElo = nextElo(current.elo, liked);
+    const newScore = nextScore(current.elo, liked);
 
-    await supabase.from("artworks").update({ elo: newElo }).eq("id", current.id);
+    await supabase.from("artworks").update({ elo: newScore }).eq("id", current.id);
 
     if (userId) {
       await supabase.from("votes").insert({
@@ -72,9 +76,7 @@ export default function TinderArtArenaPage() {
       });
     }
 
-    setCards((prev) =>
-      prev.map((c) => (c.id === current.id ? { ...c, elo: newElo } : c))
-    );
+    setCards((prev) => prev.map((c) => (c.id === current.id ? { ...c, elo: newScore } : c)));
     setIndex((prev) => prev + 1);
   };
 
@@ -85,8 +87,13 @@ export default function TinderArtArenaPage() {
     }
   }, [complete, cards.length]);
 
-  const onTouchStart = (clientX: number) => { setTouchStartX(clientX); setTouchDeltaX(0); };
-  const onTouchMove = (clientX: number) => { if (touchStartX !== null) setTouchDeltaX(clientX - touchStartX); };
+  const onTouchStart = (clientX: number) => {
+    setTouchStartX(clientX);
+    setTouchDeltaX(0);
+  };
+  const onTouchMove = (clientX: number) => {
+    if (touchStartX !== null) setTouchDeltaX(clientX - touchStartX);
+  };
   const onTouchEnd = () => {
     if (touchDeltaX > 70) onSwipe(true);
     if (touchDeltaX < -70) onSwipe(false);
@@ -100,8 +107,10 @@ export default function TinderArtArenaPage() {
     return (
       <PageShell maxWidth="2xl">
         <PageCard className="px-5 py-10 sm:px-8 sm:py-12 md:px-12">
-          <PrimaryLinkButton href={ROUTES.tinderArt}
-            className="mb-5 w-fit border-stone-400 bg-stone-100 px-4 py-2 text-xs text-stone-800 hover:bg-stone-200">
+          <PrimaryLinkButton
+            href={ROUTES.rateIt}
+            className="mb-5 w-fit border-stone-400 bg-stone-100 px-4 py-2 text-xs text-stone-800 hover:bg-stone-200"
+          >
             Back
           </PrimaryLinkButton>
           <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
@@ -120,23 +129,23 @@ export default function TinderArtArenaPage() {
 
   return (
     <PageShell maxWidth="2xl">
-      <PageCard className="px-5 py-9 sm:px-8 sm:py-11 md:px-12 animate-[rise-in_700ms_ease-out]">
-        <PrimaryLinkButton href={ROUTES.tinderArt}
-          className="mb-5 w-fit border-stone-400 bg-stone-100 px-4 py-2 text-xs text-stone-800 hover:bg-stone-200">
+      <PageCard className="animate-[rise-in_700ms_ease-out] px-5 py-9 sm:px-8 sm:py-11 md:px-12">
+        <PrimaryLinkButton
+          href={ROUTES.rateIt}
+          className="mb-5 w-fit border-stone-400 bg-stone-100 px-4 py-2 text-xs text-stone-800 hover:bg-stone-200"
+        >
           Back
         </PrimaryLinkButton>
         <p className="text-xs font-semibold uppercase tracking-[0.45em] text-stone-500">arena</p>
 
         {!complete ? (
           <>
-            <PageTitle className="mt-4 text-4xl sm:text-5xl">Swipe and rate art</PageTitle>
+            <PageTitle className="mt-4 text-4xl sm:text-5xl">Swipe to rate!</PageTitle>
             <div className="mt-4 flex items-center justify-between">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-stone-600">Artwork ELO</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-stone-600">Score</p>
               <p className="text-2xl font-black text-stone-900">{current.elo}</p>
             </div>
-            <div className="mt-2 text-sm font-semibold text-stone-700">
-              by {current.username}
-            </div>
+            <div className="mt-2 text-sm font-semibold text-stone-700">by {current.username}</div>
             <div className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
               {index + 1} / {cards.length}
             </div>
@@ -157,7 +166,7 @@ export default function TinderArtArenaPage() {
                   width={800}
                   height={800}
                   unoptimized
-                  className="h-[clamp(360px,62vh,760px)] w-full object-contain"
+                  className="h-[clamp(360px,62dvh,760px)] w-full object-contain"
                 />
               </div>
             </div>
@@ -165,10 +174,16 @@ export default function TinderArtArenaPage() {
               Swipe left for no, right for yes
             </p>
             <div className="mt-6 hidden gap-3 sm:flex">
-              <PrimaryButton type="button" onClick={() => onSwipe(false)}
-                className="w-full border-stone-500 bg-stone-500 hover:bg-stone-600 sm:flex-1">No</PrimaryButton>
-              <PrimaryButton type="button" onClick={() => onSwipe(true)}
-                className="w-full sm:flex-1">Yes</PrimaryButton>
+              <PrimaryButton
+                type="button"
+                onClick={() => onSwipe(false)}
+                className="w-full border-stone-500 bg-stone-500 hover:bg-stone-600 sm:flex-1"
+              >
+                No
+              </PrimaryButton>
+              <PrimaryButton type="button" onClick={() => onSwipe(true)} className="w-full sm:flex-1">
+                Yes
+              </PrimaryButton>
             </div>
           </>
         ) : (
@@ -179,30 +194,47 @@ export default function TinderArtArenaPage() {
             </p>
             {showLeaderboard ? (
               <div className="mt-6 space-y-3">
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {topThree.map((card, rank) => (
-                    <div key={`top-${card.id}`} className="rounded-xl border border-stone-200 bg-white/75 p-3">
+                    <div key={`top-${card.id}`} className="rounded-xl border border-stone-200 bg-white/75 p-2 sm:p-3">
                       <div className="overflow-hidden rounded-lg border border-stone-200">
-                        <Image src={card.src} alt={`Top ${rank + 1}`} width={220} height={220}
-                          unoptimized className="aspect-square w-full bg-[#fffaf1] object-contain" />
+                        <Image
+                          src={card.src}
+                          alt={`Top ${rank + 1}`}
+                          width={220}
+                          height={220}
+                          unoptimized
+                          className="aspect-square w-full bg-[#fffaf1] object-contain"
+                        />
                       </div>
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Rank {rank + 1}</p>
-                      <p className="mt-1 text-base font-bold text-stone-800">{card.username}</p>
-                      <p className="text-lg font-black text-stone-900">{card.elo}</p>
+                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-500 sm:mt-2 sm:text-xs sm:tracking-[0.2em]">
+                        Rank {rank + 1}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs font-bold text-stone-800 sm:mt-1 sm:text-base">
+                        {card.username}
+                      </p>
+                      <p className="text-sm font-black text-stone-900 sm:text-lg">{card.elo}</p>
                     </div>
                   ))}
                 </div>
                 {leaderboard.map((card, rank) => (
-                  <div key={card.id} className="flex items-center justify-between rounded-xl border border-stone-200 bg-white/70 px-4 py-3">
-                    <p className="text-sm font-semibold text-stone-700">#{rank + 1}</p>
-                    <p className="text-sm font-semibold text-stone-600">{card.username}</p>
-                    <p className="text-base font-black text-stone-900">{card.elo}</p>
+                  <div
+                    key={card.id}
+                    className="flex items-center justify-between rounded-xl border border-stone-200 bg-white/70 px-3 py-2 sm:px-4 sm:py-3"
+                  >
+                    <p className="text-xs font-semibold text-stone-700 sm:text-sm">#{rank + 1}</p>
+                    <p className="max-w-[45%] truncate text-xs font-semibold text-stone-600 sm:text-sm">
+                      {card.username}
+                    </p>
+                    <p className="text-sm font-black text-stone-900 sm:text-base">{card.elo}</p>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="mt-6">
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">Building leaderboard...</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">
+                  Building leaderboard...
+                </p>
               </div>
             )}
           </>
@@ -211,3 +243,4 @@ export default function TinderArtArenaPage() {
     </PageShell>
   );
 }
+

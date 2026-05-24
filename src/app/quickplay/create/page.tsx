@@ -6,14 +6,12 @@ import PageCard from "@/components/ui/page-card";
 import PageTitle from "@/components/ui/page-title";
 import { PrimaryButton, PrimaryLinkButton } from "@/components/ui/primary-button";
 import { DAILY_DRAW_SECONDS, ROUTES } from "@/lib/constants";
+import { getDailyTheme } from "@/lib/daily-theme";
+import { getLocalDayKey, getLocalDayRange } from "@/lib/day";
 import { supabase } from "@/lib/supabase";
 
 type Point = { x: number; y: number };
 type Stroke = { color: string; size: number; points: Point[]; erase?: boolean };
-
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 function cloneStrokes(strokes: Stroke[]) {
   return strokes.map((s) => ({
@@ -35,6 +33,7 @@ export default function DailyDrawPage() {
   const [submitted, setSubmitted] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [canUndo, setCanUndo] = useState(false);
 
   const brushColorRef = useRef(brushColor);
   const brushSizeRef = useRef(brushSize);
@@ -62,17 +61,14 @@ export default function DailyDrawPage() {
       const uid = data.session.user.id;
       setUserId(uid);
 
-      const start = new Date();
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(start);
-      end.setDate(end.getDate() + 1);
+      const { startIso, endIso } = getLocalDayRange();
 
       const { data: existing } = await supabase
         .from("artworks")
         .select("id")
         .eq("user_id", uid)
-        .gte("created_at", start.toISOString())
-        .lt("created_at", end.toISOString())
+        .gte("created_at", startIso)
+        .lt("created_at", endIso)
         .maybeSingle();
 
       if (existing) setSubmitted(true);
@@ -123,6 +119,7 @@ export default function DailyDrawPage() {
       const snapshot = cloneStrokes(strokesRef.current);
       undoStackRef.current.push(snapshot);
       if (undoStackRef.current.length > 100) undoStackRef.current.shift();
+      setCanUndo(undoStackRef.current.length > 0);
 
       isDrawingRef.current = true;
       const color = brushColorRef.current;
@@ -200,6 +197,7 @@ export default function DailyDrawPage() {
     const snapshot = cloneStrokes(strokesRef.current);
     undoStackRef.current.push(snapshot);
     if (undoStackRef.current.length > 100) undoStackRef.current.shift();
+    setCanUndo(undoStackRef.current.length > 0);
     strokesRef.current = [];
     redrawRef.current();
   };
@@ -210,6 +208,7 @@ export default function DailyDrawPage() {
     const last = undoStackRef.current.pop();
     if (!last) return;
     strokesRef.current = last;
+    setCanUndo(undoStackRef.current.length > 0);
     redrawRef.current();
   };
 
@@ -225,7 +224,7 @@ export default function DailyDrawPage() {
     const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/png"));
     if (!blob) return;
 
-    const filePath = `${userId}/${todayKey()}.png`;
+    const filePath = `${userId}/${getLocalDayKey()}.png`;
     const { error: uploadError } = await supabase.storage
       .from("artworks")
       .upload(filePath, blob, { upsert: true, contentType: "image/png" });
@@ -254,6 +253,7 @@ export default function DailyDrawPage() {
 
   const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const seconds = String(secondsLeft % 60).padStart(2, "0");
+  const dailyTheme = getDailyTheme();
 
   return (
     <PageShell maxWidth="4xl">
@@ -265,7 +265,10 @@ export default function DailyDrawPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.45em] text-stone-500">daily draw</p>
         <PageTitle className="mt-4 text-4xl sm:text-5xl">Draw and submit today&apos;s entry</PageTitle>
         <p className="mt-4 max-w-2xl text-base leading-7 text-stone-700">
-          You have one official 2-minute submission each day. Your drawing enters TinderArt voting.
+          You have one official 2-minute submission each day. After submitting, your drawing enters Rate It voting.
+        </p>
+        <p className="mt-2 max-w-2xl text-sm font-semibold text-stone-700">
+          Today&apos;s theme: {dailyTheme}
         </p>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -317,7 +320,7 @@ export default function DailyDrawPage() {
             </button>
             <button
               onClick={undo}
-              disabled={!canEdit || undoStackRef.current.length === 0}
+              disabled={!canEdit || !canUndo}
               className={`${toolButtonClass} px-3 py-1.5 text-[11px]`}
             >
               Undo
@@ -335,7 +338,7 @@ export default function DailyDrawPage() {
         <div className="mt-6 overflow-hidden rounded-2xl border border-stone-300 bg-[#fffaf1]">
           <canvas
             ref={canvasRef}
-            className="block h-[clamp(360px,62vh,760px)] w-full touch-none"
+            className="block h-[clamp(360px,62dvh,760px)] w-full touch-none"
             style={{ pointerEvents: "auto", touchAction: "none" }}
           />
         </div>
@@ -345,9 +348,9 @@ export default function DailyDrawPage() {
             className="w-full disabled:cursor-not-allowed disabled:opacity-50 sm:flex-1">
             Submit daily entry
           </PrimaryButton>
-          <PrimaryLinkButton href={ROUTES.tinderArt}
+          <PrimaryLinkButton href={ROUTES.rateIt}
             className="w-full border-stone-400 bg-stone-100 text-stone-800 hover:bg-stone-200 sm:flex-1">
-            Go to TinderArt
+            Go to Rate It
           </PrimaryLinkButton>
         </div>
       </PageCard>

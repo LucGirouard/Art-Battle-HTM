@@ -29,10 +29,10 @@ export default function Home() {
               Daily Draw
             </PrimaryLinkButton>
             <PrimaryLinkButton
-              href={ROUTES.tinderArt}
+              href={ROUTES.rateIt}
               className="w-full px-8 text-base shadow-[0_8px_18px_rgba(95,50,10,0.16)] active:translate-y-0 sm:flex-1"
             >
-              TinderArt
+              Rate It
             </PrimaryLinkButton>
           </div>
 

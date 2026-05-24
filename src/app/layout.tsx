@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: "%s | Doodle Duel",
   },
   description:
-    "A daily drawing challenge where the community votes and ranks art in TinderArt.",
+    "A daily drawing challenge where the community votes and ranks art in Rate It.",
   applicationName: "Doodle Duel",
   appleWebApp: {
     capable: true,
@@ -25,7 +25,6 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.ico",
-    apple: "/favicon.ico",
   },
 };
 
