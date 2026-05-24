@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import PageShell from "@/components/page-shell";
 import PageCard from "@/components/ui/page-card";
@@ -11,131 +10,107 @@ import {
   PrimaryLinkButton,
 } from "@/components/ui/primary-button";
 import {
+  DAILY_DRAW_SUBMISSION_KEY,
   ROUTES,
-  TINDERART_MAX_UPLOADS,
   TINDERART_STORAGE_KEY,
 } from "@/lib/constants";
 import { isLoggedIn } from "@/lib/auth";
 
-function toDataUrl(file: File) {
-  return new Promise<string>((resolve) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.readAsDataURL(file);
-  });
-}
+type DailySubmission = {
+  date: string;
+};
 
 export default function TinderArtPage() {
   const router = useRouter();
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [submitStatus, setSubmitStatus] = useState<"idle" | "done">("idle");
   const loggedIn = isLoggedIn();
+  const [todaySubmitted] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const today = new Date().toISOString().slice(0, 10);
+    const submissionRaw = window.localStorage.getItem(DAILY_DRAW_SUBMISSION_KEY);
+    if (!submissionRaw) return false;
+    try {
+      const parsed = JSON.parse(submissionRaw) as DailySubmission;
+      return parsed?.date === today;
+    } catch {
+      return false;
+    }
+  });
+  const [poolSize] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const poolRaw = window.localStorage.getItem(TINDERART_STORAGE_KEY);
+    if (!poolRaw) return 0;
+    try {
+      const parsed = JSON.parse(poolRaw);
+      return Array.isArray(parsed) ? parsed.filter(Boolean).length : 0;
+    } catch {
+      return 0;
+    }
+  });
 
   useEffect(() => {
     if (!loggedIn) {
-      router.replace(`${ROUTES.auth}?mode=login&next=${encodeURIComponent(ROUTES.tinderArt)}`);
+      router.replace(
+        `${ROUTES.auth}?mode=login&next=${encodeURIComponent(ROUTES.tinderArt)}`,
+      );
     }
   }, [loggedIn, router]);
 
-  const onFilesSelected = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const imageFiles = Array.from(files).filter((file) =>
-      file.type.startsWith("image/"),
-    );
-    const dataUrls = await Promise.all(
-      imageFiles.slice(0, TINDERART_MAX_UPLOADS).map(toDataUrl),
-    );
-    setPreviews(dataUrls.filter(Boolean));
-  };
-
-  const submitUploads = () => {
-    window.localStorage.setItem(
-      TINDERART_STORAGE_KEY,
-      JSON.stringify(previews),
-    );
-    setSubmitStatus("done");
-  };
-
   const enterArena = () => {
-    if (previews.length === 0) {
-      window.localStorage.setItem(TINDERART_STORAGE_KEY, JSON.stringify([]));
-    }
     router.push(ROUTES.tinderArtArena);
   };
-
-  const requiresSubmit = previews.length > 0 && submitStatus !== "done";
 
   if (!loggedIn) return null;
 
   return (
     <PageShell maxWidth="4xl">
       <PageCard className="px-5 py-9 sm:px-8 sm:py-11 md:px-12 animate-[rise-in_700ms_ease-out]">
+        <PrimaryLinkButton
+          href={ROUTES.quickplay}
+          className="mb-5 w-fit border-stone-400 bg-stone-100 px-4 py-2 text-xs text-stone-800 hover:bg-stone-200"
+        >
+          Back
+        </PrimaryLinkButton>
         <p className="text-xs font-semibold uppercase tracking-[0.45em] text-stone-500">
-          tinderart
+          leaderboard
         </p>
         <PageTitle className="mt-4 text-4xl sm:text-5xl">
-          Upload art and enter the arena
+          Vote on today&apos;s daily draw entries
         </PageTitle>
         <p className="mt-4 max-w-2xl text-base leading-7 text-stone-700">
-          Add your own image (optional). Then enter the arena and swipe yes/no
-          on art from other players.
+          Swipe through artwork from the current daily challenge and help rank
+          the leaderboard.
         </p>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <label className="block">
-            <span className="sr-only">Upload art</span>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(event) => onFilesSelected(event.target.files)}
-              className="block w-full rounded-2xl border border-stone-300 bg-[#fffaf1] px-4 py-3 text-sm text-stone-700"
-            />
-          </label>
-          <PrimaryButton
-            onClick={submitUploads}
-            disabled={previews.length === 0}
-            className="w-full px-5 text-sm disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-          >
-            Submit upload
-          </PrimaryButton>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-white/70 bg-white/70 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
+              Your status
+            </p>
+            <p className="mt-2 text-base font-semibold text-stone-900">
+              {todaySubmitted
+                ? "Submitted today"
+                : "No daily draw submitted yet"}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/70 bg-white/70 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">
+              Voting pool
+            </p>
+            <p className="mt-2 text-base font-semibold text-stone-900">
+              {poolSize} artwork{poolSize === 1 ? "" : "s"} available
+            </p>
+          </div>
         </div>
 
-        {previews.length > 0 && (
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {previews.map((src, index) => (
-              <Image
-                key={`${src}-${index}`}
-                src={src}
-                alt={`Uploaded preview ${index + 1}`}
-                width={300}
-                height={300}
-                unoptimized
-                className="aspect-square w-full rounded-xl border border-stone-200 object-cover"
-              />
-            ))}
-          </div>
-        )}
-
-        {submitStatus === "done" && (
-          <p className="mt-4 text-sm font-semibold text-emerald-700">
-            Picture uploaded successfully.
-          </p>
-        )}
-
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <PrimaryButton
-            onClick={enterArena}
-            disabled={requiresSubmit}
-            className="w-full px-7 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-1"
-          >
-            Enter arena
+          <PrimaryButton onClick={enterArena} className="w-full sm:flex-1">
+            Enter voting arena
           </PrimaryButton>
           <PrimaryLinkButton
-            href={ROUTES.home}
+            href={ROUTES.quickplayCreate}
             className="w-full border-stone-400 bg-stone-100 text-stone-800 hover:bg-stone-200 sm:flex-1"
           >
-            Back home
+            Open Daily Draw
           </PrimaryLinkButton>
         </div>
       </PageCard>

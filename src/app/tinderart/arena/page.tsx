@@ -157,8 +157,14 @@ export default function TinderArtArenaPage() {
   return (
     <PageShell maxWidth="2xl">
       <PageCard className="px-5 py-9 sm:px-8 sm:py-11 md:px-12 animate-[rise-in_700ms_ease-out]">
+        <PrimaryLinkButton
+          href={ROUTES.tinderArt}
+          className="mb-5 w-fit border-stone-400 bg-stone-100 px-4 py-2 text-xs text-stone-800 hover:bg-stone-200"
+        >
+          Back
+        </PrimaryLinkButton>
         <p className="text-xs font-semibold uppercase tracking-[0.45em] text-stone-500">
-          tinderart arena
+          arena
         </p>
         {!complete ? (
           <>
@@ -285,14 +291,6 @@ export default function TinderArtArenaPage() {
           </>
         )}
 
-        <div className="mt-6">
-          <PrimaryLinkButton
-            href={ROUTES.tinderArt}
-            className="w-full border-stone-400 bg-stone-100 text-stone-800 hover:bg-stone-200 sm:w-auto"
-          >
-            Go back
-          </PrimaryLinkButton>
-        </div>
       </PageCard>
     </PageShell>
   );

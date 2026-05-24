@@ -3,14 +3,14 @@ export const ROUTES = {
   auth: "/auth",
   quickplay: "/quickplay",
   quickplayCreate: "/quickplay/create",
-  quickplayJoin: (code: string) => `/quickplay/join/${code}`,
   tinderArt: "/tinderart",
   tinderArtArena: "/tinderart/arena",
 } as const;
 
-export const ROOM_CODE_LENGTH = 4;
 export const TINDERART_STORAGE_KEY = "tinderart_uploads";
 export const TINDERART_MAX_UPLOADS = 10;
 export const TINDERART_STARTING_ELO = 1000;
 export const TINDERART_ELO_UP = 12;
 export const TINDERART_ELO_DOWN = 10;
+export const DAILY_DRAW_SECONDS = 180;
+export const DAILY_DRAW_SUBMISSION_KEY = "daily_draw_submission";
