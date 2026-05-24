@@ -150,8 +150,16 @@ export default function TinderArtArenaPage() {
                 transition: touchStartX === null ? "transform 180ms ease" : "none",
               }}
             >
-              <Image src={current.src} alt="Arena artwork" width={800} height={800}
-                unoptimized className="aspect-square w-full object-cover" />
+              <div className="bg-[#fffaf1]">
+                <Image
+                  src={current.src}
+                  alt="Arena artwork"
+                  width={800}
+                  height={800}
+                  unoptimized
+                  className="h-[clamp(360px,62vh,760px)] w-full object-contain"
+                />
+              </div>
             </div>
             <p className="mt-3 text-center text-xs uppercase tracking-[0.2em] text-stone-500 sm:hidden">
               Swipe left for no, right for yes
@@ -176,7 +184,7 @@ export default function TinderArtArenaPage() {
                     <div key={`top-${card.id}`} className="rounded-xl border border-stone-200 bg-white/75 p-3">
                       <div className="overflow-hidden rounded-lg border border-stone-200">
                         <Image src={card.src} alt={`Top ${rank + 1}`} width={220} height={220}
-                          unoptimized className="aspect-square w-full object-cover" />
+                          unoptimized className="aspect-square w-full bg-[#fffaf1] object-contain" />
                       </div>
                       <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Rank {rank + 1}</p>
                       <p className="mt-1 text-base font-bold text-stone-800">{card.username}</p>
