@@ -44,12 +44,29 @@ export default function RateItArenaPage() {
       setUserId(uid);
       const { startIso, endIso } = getLocalDayRange();
 
-      const { data: artworks } = await supabase
+      const { data: votedRows } = await supabase
+        .from("votes")
+        .select("artwork_id")
+        .eq("user_id", uid);
+
+      const votedIds = votedRows?.map((vote) => vote.artwork_id) ?? [];
+
+      let query = supabase
         .from("artworks")
         .select("id, image_url, elo, username")
         .gte("created_at", startIso)
         .lt("created_at", endIso)
         .order("created_at", { ascending: false });
+
+      if (votedIds.length > 0) {
+        query = query.not(
+          "id",
+          "in",
+          `(${votedIds.map((id) => `"${id}"`).join(",")})`,
+        );
+      }
+
+      const { data: artworks } = await query;
 
       if (artworks) {
         setCards(
