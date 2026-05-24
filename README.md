@@ -6,7 +6,7 @@ Draw once, submit in 2 minutes, then jump into the arena and rate everyone else'
 
 ## Demo
 
-- Live app: `https://art-battle-htm.vercel.app/`
+- Live app: `doodle-duel-htm.vercel.app`
 - Video: `need to film`
 
 ## What It Does
