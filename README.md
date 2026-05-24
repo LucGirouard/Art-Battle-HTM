@@ -1,6 +1,6 @@
 # Doodle Duel - Hack The Mountain
 
-A fast-paced, daily art game that requires the user to draw and submit in 2 minutes, then jump into the arena and rate everyone else's artwork!
+A fun and fast-paced, daily art game that requires the user to draw and submit in 2 minutes, then jump into the arena and rate everyone else's artwork!
 
 ## Demo
 
